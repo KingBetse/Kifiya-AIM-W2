@@ -1,4 +1,4 @@
-# User Analysis Project
+# Telecon User Analysis Project
 
 ## Overview
 This project analyzes user engagement data from a telecom dataset to understand customer behavior and improve marketing strategies. It focuses on identifying top handsets, manufacturers, and user engagement metrics.
