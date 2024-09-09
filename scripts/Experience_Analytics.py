@@ -104,20 +104,31 @@ def distribution_per_handset(df, top_n=10):
 
 # K-Means Clustering
 def perform_clustering(df):
+    # Convert relevant columns to numeric, coercing errors
+    df['TCP DL Retrans. Vol (Bytes)'] = pd.to_numeric(df['TCP DL Retrans. Vol (Bytes)'], errors='coerce')
+    df['TCP UL Retrans. Vol (Bytes)'] = pd.to_numeric(df['TCP UL Retrans. Vol (Bytes)'], errors='coerce')
+    df['Avg RTT DL (ms)'] = pd.to_numeric(df['Avg RTT DL (ms)'], errors='coerce')
+    df['Avg RTT UL (ms)'] = pd.to_numeric(df['Avg RTT UL (ms)'], errors='coerce')
+
+    # Drop rows with NaN values
+    df = df.dropna()
+
+    # Drop the existing Cluster column if it exists
+    # if 'Cluster' in df.columns:
+    #     df.drop(columns=['Cluster'], inplace=True)
+
     # Selecting features for clustering
     features = df[['TCP DL Retrans. Vol (Bytes)', 'TCP UL Retrans. Vol (Bytes)', 'Avg RTT DL (ms)', 'Avg RTT UL (ms)']]
-    
+
+    # Perform KMeans clustering
     kmeans = KMeans(n_clusters=3, random_state=42)
     df['Cluster'] = kmeans.fit_predict(features)
 
-    # Describe each cluster
-    cluster_description = df.groupby('Cluster').mean().reset_index()
-    return cluster_description
+    # Count instances in each cluster
+    cluster_counts = df['Cluster'].value_counts().sort_index()
 
-# cluster_info = perform_clustering(aggregated_data)
+    return df,cluster_counts
 
-# Print cluster descriptions
-# print(cluster_info)
 
 # Task 4.4: Dashboard Development
 # Note: Implementation would typically involve a framework like Dash or Streamlit.
