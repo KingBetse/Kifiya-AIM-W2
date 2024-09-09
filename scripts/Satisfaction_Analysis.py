@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 from sklearn.metrics import pairwise_distances
@@ -5,26 +6,26 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.cluster import KMeans
-# import mysql.connector
-# import mlflow
+import psycopg2
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 # Task 4.1: Calculate Engagement and Experience Scores
 def calculate_scores(df, engagement_clusters, experience_clusters):
-    """
-    Calculate engagement and experience scores based on Euclidean distances
-    to the centroids of the respective clusters.
-    """
+    
     # Calculate the centroid for engagement and experience clusters
-    engagement_centroid = engagement_clusters.mean().values
-    experience_centroid = experience_clusters.mean().values
+    engagement_centroid = engagement_clusters[['total_DL', 'total_UL']].mean().values.reshape(1, -1)
+    experience_centroid = experience_clusters[['Avg RTT DL (ms)', 'Avg RTT UL (ms)']].mean().values.reshape(1, -1)
 
     # Calculate engagement scores using pairwise distances
     df['Engagement Score'] = pairwise_distances(df[['TCP DL Retrans. Vol (Bytes)', 'TCP UL Retrans. Vol (Bytes)']], 
-                                                  [engagement_centroid]).flatten()
+                                                  engagement_centroid).flatten()
     
     # Calculate experience scores using pairwise distances
     df['Experience Score'] = pairwise_distances(df[['Avg RTT DL (ms)', 'Avg RTT UL (ms)']], 
-                                                  [experience_centroid]).flatten()
+                                                  experience_centroid).flatten()
     
     return df
 
@@ -36,7 +37,7 @@ def calculate_satisfaction(df):
     """
     df['Satisfaction Score'] = (df['Engagement Score'] + df['Experience Score']) / 2
     top_customers = df.nlargest(10, 'Satisfaction Score')
-    return top_customers[['User ID', 'Satisfaction Score']]
+    return top_customers[['IMSI', 'Satisfaction Score']]
 
 # Task 4.3: Build a Regression Model
 def regression_model(df):
@@ -80,22 +81,24 @@ def aggregate_scores(df):
     return cluster_summary
 
 # Task 4.6: Export to MySQL Database
-def export_to_mysql(df):
+
+def export_to_postgresql(df):
     """
-    Export engagement, experience, and satisfaction scores to a MySQL database.
+    Export engagement, experience, and satisfaction scores to a PostgreSQL database.
     """
-    connection = mysql.connector.connect(
-        host='localhost', 
-        user='your_username', 
-        password='your_password', 
-        database='your_database'
+    connection = psycopg2.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
     )
+    
     cursor = connection.cursor()
 
     # Create table if it does not exist
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS user_scores (
-            UserID INT,
+            IMSI FLOAT,
             EngagementScore FLOAT,
             ExperienceScore FLOAT,
             SatisfactionScore FLOAT
@@ -105,13 +108,14 @@ def export_to_mysql(df):
     # Insert data into the database
     for _, row in df.iterrows():
         cursor.execute('''
-            INSERT INTO user_scores (UserID, EngagementScore, ExperienceScore, SatisfactionScore) 
+            INSERT INTO user_scores (IMSI, EngagementScore, ExperienceScore, SatisfactionScore) 
             VALUES (%s, %s, %s, %s)
-        ''', (row['User ID'], row['Engagement Score'], row['Experience Score'], row['Satisfaction Score']))
+        ''', (row['IMSI'], row['Engagement Score'], row['Experience Score'], row['Satisfaction Score']))
 
     connection.commit()  # Commit the transaction
     cursor.close()  # Close the cursor
     connection.close()  # Close the connection
+
 
 # Task 4.7: Model Deployment Tracking
 def track_model_deployment(model, X_train, X_test, mse):

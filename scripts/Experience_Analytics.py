@@ -106,13 +106,13 @@ def distribution_per_handset(df, top_n=10):
 def perform_clustering(df):
     # Selecting features for clustering
     features = df[['TCP DL Retrans. Vol (Bytes)', 'TCP UL Retrans. Vol (Bytes)', 'Avg RTT DL (ms)', 'Avg RTT UL (ms)']]
-    
+    df = df.drop(columns=['Handset Type'])    
     kmeans = KMeans(n_clusters=3, random_state=42)
     df['Cluster'] = kmeans.fit_predict(features)
 
     # Describe each cluster
-    cluster_description = df.groupby('Cluster').mean().reset_index()
-    return cluster_description
+    # cluster_description = df.groupby('Cluster').mean().reset_index()
+    return df
 
 # cluster_info = perform_clustering(aggregated_data)
 
