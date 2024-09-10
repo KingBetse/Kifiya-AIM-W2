@@ -62,11 +62,6 @@ def compute_values(df):
         'Most Frequent': tcp_ul_most_frequent
     })
 
-    # Print summaries for better visibility
-    print("TCP DL Summary:")
-    print(tcp_dl_summary)
-    print("\nTCP UL Summary:")
-    print(tcp_ul_summary)
 
     return {
         'TCP DL Summary': tcp_dl_summary,
@@ -104,31 +99,21 @@ def distribution_per_handset(df, top_n=10):
 
 # K-Means Clustering
 def perform_clustering(df):
-    # Convert relevant columns to numeric, coercing errors
-    df['TCP DL Retrans. Vol (Bytes)'] = pd.to_numeric(df['TCP DL Retrans. Vol (Bytes)'], errors='coerce')
-    df['TCP UL Retrans. Vol (Bytes)'] = pd.to_numeric(df['TCP UL Retrans. Vol (Bytes)'], errors='coerce')
-    df['Avg RTT DL (ms)'] = pd.to_numeric(df['Avg RTT DL (ms)'], errors='coerce')
-    df['Avg RTT UL (ms)'] = pd.to_numeric(df['Avg RTT UL (ms)'], errors='coerce')
-
-    # Drop rows with NaN values
-    df = df.dropna()
-
-    # Drop the existing Cluster column if it exists
-    # if 'Cluster' in df.columns:
-    #     df.drop(columns=['Cluster'], inplace=True)
-
     # Selecting features for clustering
     features = df[['TCP DL Retrans. Vol (Bytes)', 'TCP UL Retrans. Vol (Bytes)', 'Avg RTT DL (ms)', 'Avg RTT UL (ms)']]
-
-    # Perform KMeans clustering
+    df = df.drop(columns=['Handset Type'])    
     kmeans = KMeans(n_clusters=3, random_state=42)
     df['Cluster'] = kmeans.fit_predict(features)
 
-    # Count instances in each cluster
-    cluster_counts = df['Cluster'].value_counts().sort_index()
-
+    # Count the number of occurrences in each cluster
+    cluster_counts = df['Cluster'].value_counts().reset_index()
+    cluster_counts.columns = ['Cluster', 'Count']
+    
     return df,cluster_counts
+# cluster_info = perform_clustering(aggregated_data)
 
+# Print cluster descriptions
+# print(cluster_info)
 
 # Task 4.4: Dashboard Development
 # Note: Implementation would typically involve a framework like Dash or Streamlit.
