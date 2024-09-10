@@ -62,11 +62,6 @@ def compute_values(df):
         'Most Frequent': tcp_ul_most_frequent
     })
 
-    # Print summaries for better visibility
-    print("TCP DL Summary:")
-    print(tcp_dl_summary)
-    print("\nTCP UL Summary:")
-    print(tcp_ul_summary)
 
     return {
         'TCP DL Summary': tcp_dl_summary,
@@ -110,10 +105,11 @@ def perform_clustering(df):
     kmeans = KMeans(n_clusters=3, random_state=42)
     df['Cluster'] = kmeans.fit_predict(features)
 
-    # Describe each cluster
-    # cluster_description = df.groupby('Cluster').mean().reset_index()
-    return df
-
+    # Count the number of occurrences in each cluster
+    cluster_counts = df['Cluster'].value_counts().reset_index()
+    cluster_counts.columns = ['Cluster', 'Count']
+    
+    return df,cluster_counts
 # cluster_info = perform_clustering(aggregated_data)
 
 # Print cluster descriptions

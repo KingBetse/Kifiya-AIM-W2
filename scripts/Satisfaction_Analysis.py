@@ -1,4 +1,5 @@
 import os
+import mlflow
 import numpy as np
 import pandas as pd
 from sklearn.metrics import pairwise_distances
@@ -12,7 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Task 4.1: Calculate Engagement and Experience Scores
+# Calculate Engagement and Experience Scores
 def calculate_scores(df, engagement_clusters, experience_clusters):
     
     # Calculate the centroid for engagement and experience clusters
@@ -26,10 +27,11 @@ def calculate_scores(df, engagement_clusters, experience_clusters):
     # Calculate experience scores using pairwise distances
     df['Experience Score'] = pairwise_distances(df[['Avg RTT DL (ms)', 'Avg RTT UL (ms)']], 
                                                   experience_centroid).flatten()
-    
-    return df
+    # Select specific columns to return
+    result_df = df[['MSISDN/Number','Engagement Score', 'Experience Score']]
+    return df,result_df
 
-# Task 4.2: Calculate Satisfaction Score and Report Top 10 Customers
+# Calculate Satisfaction Score and Report Top 10 Customers
 def calculate_satisfaction(df):
     """
     Calculate satisfaction scores and return the top 10 customers
@@ -37,9 +39,9 @@ def calculate_satisfaction(df):
     """
     df['Satisfaction Score'] = (df['Engagement Score'] + df['Experience Score']) / 2
     top_customers = df.nlargest(10, 'Satisfaction Score')
-    return top_customers[['IMSI', 'Satisfaction Score']]
+    return top_customers[['MSISDN/Number', 'Satisfaction Score']]
 
-# Task 4.3: Build a Regression Model
+# Build a Regression Model
 def regression_model(df):
     """
     Build a linear regression model to predict satisfaction scores
@@ -57,9 +59,9 @@ def regression_model(df):
     y_pred = model.predict(X_test)  # Make predictions
     mse = mean_squared_error(y_test, y_pred)  # Calculate mean squared error
     
-    return model, mse
+    return model, mse,X_test,X_train
 
-# Task 4.4: Run K-Means on Engagement and Experience Scores
+# Run K-Means on Engagement and Experience Scores
 def kmeans_clustering(df):
     """
     Perform K-Means clustering on engagement and experience scores
@@ -69,7 +71,7 @@ def kmeans_clustering(df):
     df['Engagement & Experience Cluster'] = kmeans.fit_predict(df[['Engagement Score', 'Experience Score']])
     return df
 
-# Task 4.5: Aggregate Average Scores per Cluster
+# Aggregate Average Scores per Cluster
 def aggregate_scores(df):
     """
     Aggregate average satisfaction and experience scores per cluster.
@@ -80,7 +82,7 @@ def aggregate_scores(df):
     }).reset_index()
     return cluster_summary
 
-# Task 4.6: Export to MySQL Database
+# Export to MySQL Database
 
 def export_to_postgresql(df):
     """
@@ -117,7 +119,7 @@ def export_to_postgresql(df):
     connection.close()  # Close the connection
 
 
-# Task 4.7: Model Deployment Tracking
+#  Model Deployment Tracking
 def track_model_deployment(model, X_train, X_test, mse):
     """
     Track model parameters and metrics using MLflow.
@@ -128,6 +130,9 @@ def track_model_deployment(model, X_train, X_test, mse):
     mlflow.log_param("test_size", len(X_test))  # Log testing size
     mlflow.log_metric("mse", mse)  # Log mean squared error
 
-    # Save the trained model
-    mlflow.sklearn.log_model(model, "model")
+    # Create an input example
+    input_example = np.array([X_train[0]])  # Example input from training data
+
+    # Save the trained model with input example
+    mlflow.sklearn.log_model(model, "model", input_example=input_example)
     mlflow.end_run()  # End the MLflow run
