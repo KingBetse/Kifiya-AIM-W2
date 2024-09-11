@@ -112,25 +112,5 @@ def perform_clustering(df):
     return df,cluster_counts
 # cluster_info = perform_clustering(aggregated_data)
 
-# Print cluster descriptions
-# print(cluster_info)
 
-# Task 4.4: Dashboard Development
-# Note: Implementation would typically involve a framework like Dash or Streamlit.
-# Here, we will just outline the components required.
 
-def create_dashboard():
-    # KPIs to visualize
-    # 1. Average TCP DL Retransmission
-    # 2. Average TCP UL Retransmission
-    # 3. Average RTT DL and UL
-    
-    # Dashboard Usability: Ensure all visualizations are clear and labeled.
-    # Interactive Elements: Use dropdowns for filtering by Handset Type.
-    # Visual Appeal: Maintain a clean layout with consistent color schemes.
-    
-    # Deployment: Use a framework like Dash or Streamlit to deploy the dashboard online.
-    pass  # Replace this with actual dashboard code using a visualization library.
-
-# Uncomment the line below to create the dashboard
-# create_dashboard()
