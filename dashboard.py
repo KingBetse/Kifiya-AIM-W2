@@ -19,7 +19,7 @@ if df is not None:
 else:
     print("Failed to load data")  # Error message if loading data failed
 # Set the title for the Streamlit app
-st.title("Telecom Company Analysis and Strategic Recommendations")
+st.title("Telecom Company Analysis")
 st.subheader("Key Figures and Insights")
 # Calculate top 10 handsets
 
